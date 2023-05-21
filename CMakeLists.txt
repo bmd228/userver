@@ -60,8 +60,6 @@ else()
 endif()
 option(USERVER_FEATURE_JEMALLOC "Enable linkage with jemalloc memory allocator" ${JEMALLOC_DEFAULT})
 
-option(USERVER_DISABLE_PHDR_CACHE "Disable caching of dl_phdr_info items, which interferes with dlopen" OFF)
-
 option(USERVER_CHECK_PACKAGE_VERSIONS "Check package versions" ON)
 
 include(cmake/SetupEnvironment.cmake)
@@ -106,10 +104,6 @@ option(USERVER_FEATURE_CLICKHOUSE "Provide asynchronous driver for ClickHouse" $
 option(USERVER_FEATURE_RABBITMQ "Provide asynchronous driver for RabbitMQ" ON)
 option(USERVER_FEATURE_MYSQL "Provide asynchronous driver for MariaDB/MySQL" OFF)
 option(USERVER_FEATURE_UNIVERSAL "Provide a universal utilities library that does not use coroutines" ON)
-
-if (USERVER_FEATURE_GRPC)
-    include(cmake/SetupProtobuf.cmake)
-endif()
 
 if (USERVER_IS_THE_ROOT_PROJECT)
     include(testsuite/SetupUserverTestsuiteEnv.cmake)

@@ -61,13 +61,7 @@ if (USERVER_SANITIZE)
 
     # https://clang.llvm.org/docs/AddressSanitizer.html
     set(SANITIZE_ASAN_ENABLED ON)
-    if (CLANG)
-      set(SANITIZE_BUILD_FLAGS ${SANITIZE_BUILD_FLAGS} -fsanitize=address)
-    else()
-      # gcc links with ASAN dynamically by default, and that leads to all sorts of problems
-      # when we intercept dl_iterate_phdr, which ASAN uses in initialziation before main.
-      set(SANITIZE_BUILD_FLAGS ${SANITIZE_BUILD_FLAGS} -fsanitize=address -static-libasan)
-    endif()
+    set(SANITIZE_BUILD_FLAGS ${SANITIZE_BUILD_FLAGS} -fsanitize=address)
     set(SANITIZE_CXX_FLAGS -fno-omit-frame-pointer)
   endif()
 

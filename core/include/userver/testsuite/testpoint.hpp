@@ -35,7 +35,7 @@ class TestpointScope final {
   utils::FastPimpl<Impl, 24, 8> impl_;
 };
 
-bool IsTestpointEnabled(std::string_view name);
+bool IsTestpointEnabled(const std::string& name);
 
 void ExecuteTestpointBlocking(const std::string& name,
                               const formats::json::Value& json,

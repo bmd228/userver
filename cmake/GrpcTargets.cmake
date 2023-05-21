@@ -4,20 +4,35 @@
 
 if (USERVER_CONAN)
   find_package(gRPC REQUIRED)
-  set(GRPC_PROTOBUF_INCLUDE_DIRS "${protobuf_INCLUDE_DIR}")
-  get_target_property(PROTO_GRPC_CPP_PLUGIN gRPC::grpc_cpp_plugin LOCATION)
-  get_target_property(PROTO_GRPC_PYTHON_PLUGIN gRPC::grpc_python_plugin LOCATION)
+  find_package(Protobuf REQUIRED)
+  set(GRPC_LIBRARY_VERSION "${gRPC_VERSION}")
+  set(GRPC_PROTOBUF_INCLUDE_DIRS "${protobuf_INCLUDE_DIR}" CACHE PATH INTERNAL)
 else()
   # Use the builtin CMake FindProtobuf
-  set(GRPC_PROTOBUF_INCLUDE_DIRS "${Protobuf_INCLUDE_DIRS}")
+  find_package(Protobuf)
+  if(NOT Protobuf_FOUND)
+    message(FATAL_ERROR
+        "userver failed to find Protobuf compiler.\n"
+        "Please install the packages required for your system:\n\n"
+        "  Debian:    sudo apt install protobuf-compiler python3-protobuf\n"
+        "  macOS:     brew install protobuf\n"
+        "  ArchLinux: sudo pacman -S protobuf\n"
+        "  FreeBSD:   pkg install protobuf\n")
+  endif()
+  set(PROTOBUF_LIBRARY_VERSION "${Protobuf_VERSION}")
+  set(GRPC_PROTOBUF_INCLUDE_DIRS "${Protobuf_INCLUDE_DIRS}" CACHE PATH INTERNAL)
 
-  include(SetupGrpc)
+  find_package(UserverGrpc REQUIRED)
+  if(NOT TARGET Grpc)
+    add_library(Grpc ALIAS UserverGrpc)
+  endif()
+  set(GRPC_LIBRARY_VERSION "${UserverGrpc_VERSION}")
 endif()
 
 if (NOT GRPC_PROTOBUF_INCLUDE_DIRS)
   message(FATAL_ERROR "Invalid Protobuf package")
 endif()
-if (NOT gRPC_VERSION)
+if (NOT GRPC_LIBRARY_VERSION)
   message(FATAL_ERROR "Invalid gRPC package")
 endif()
 
@@ -26,21 +41,16 @@ set(PROTO_GRPC_USRV_PLUGIN "${USERVER_DIR}/scripts/grpc/protoc_usrv_plugin.sh")
 
 if(NOT USERVER_GRPC_VERSIONS_PRINTED)
   message(STATUS "Protobuf version: ${Protobuf_VERSION}")
-  message(STATUS "gRPC version: ${gRPC_VERSION}")
+  message(STATUS "gRPC version: ${GRPC_LIBRARY_VERSION}")
   set(USERVER_GRPC_VERSIONS_PRINTED ON)
 endif()
 
 # We only check the system pip protobuf package version once.
 if(NOT USERVER_IMPL_GRPC_REQUIREMENTS_CHECKED)
-  set(file_requirements_protobuf "requirements.txt")
-  if(Protobuf_VERSION VERSION_LESS 3.20.0)
-    message(STATUS "Forcing old protobuf version for python")
-    set(file_requirements_protobuf "requirements-old.txt")
-  endif()
   execute_process(
     COMMAND "${PYTHON}"
       -m pip install --disable-pip-version-check
-      -r "${USERVER_DIR}/scripts/grpc/${file_requirements_protobuf}"
+      -r "${USERVER_DIR}/scripts/grpc/requirements.txt"
     RESULT_VARIABLE RESULT
     WORKING_DIRECTORY "${USERVER_DIR}"
   )
@@ -53,17 +63,18 @@ if(NOT USERVER_IMPL_GRPC_REQUIREMENTS_CHECKED)
 endif()
 
 set(PROTOBUF_PROTOC "${Protobuf_PROTOC_EXECUTABLE}")
+if(USERVER_CONAN)
+  # Can't use find_*, because it may find a system binary with a wrong version.
+  set(PROTO_GRPC_CPP_PLUGIN "${GRPC_CPP_PLUGIN_PROGRAM}")
+else()
+  find_program(PROTO_GRPC_CPP_PLUGIN grpc_cpp_plugin)
+endif()
 
 if(NOT PROTOBUF_PROTOC)
   message(FATAL_ERROR "protoc not found")
 endif()
-
 if(NOT PROTO_GRPC_CPP_PLUGIN)
   message(FATAL_ERROR "grpc_cpp_plugin not found")
-endif()
-
-if(NOT PROTO_GRPC_PYTHON_PLUGIN)
-  message(FATAL_ERROR "grpc_python_plugin not found")
 endif()
 
 function(generate_grpc_files)
@@ -121,11 +132,6 @@ function(generate_grpc_files)
     endif()
   endforeach()
 
-  set(pyi_out_param "")
-  if(gRPC_VERSION VERSION_GREATER "1.47.0")
-    set(pyi_out_param "--pyi_out=${GENERATED_PROTO_DIR}")
-  endif()
-
   foreach (proto_file ${GEN_RPC_PROTOS})
     get_filename_component(proto_file "${proto_file}" REALPATH BASE_DIR "${root_path}")
 
@@ -147,14 +153,10 @@ function(generate_grpc_files)
               --cpp_out=${GENERATED_PROTO_DIR}
               --grpc_out=${GENERATED_PROTO_DIR}
               --usrv_out=${GENERATED_PROTO_DIR}
-              --python_out=${GENERATED_PROTO_DIR}
-              --grpc_python_out=${GENERATED_PROTO_DIR}
-              ${pyi_out_param}
               -I ${root_path}
               -I ${GRPC_PROTOBUF_INCLUDE_DIRS}
               --plugin=protoc-gen-grpc=${PROTO_GRPC_CPP_PLUGIN}
               --plugin=protoc-gen-usrv=${PROTO_GRPC_USRV_PLUGIN}
-              --plugin=protoc-gen-grpc_python=${PROTO_GRPC_PYTHON_PLUGIN}
               ${proto_file}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RESULT_VARIABLE execute_process_result
@@ -162,7 +164,6 @@ function(generate_grpc_files)
       if(execute_process_result)
         message(SEND_ERROR "Error while generating gRPC sources for ${path_base}.proto")
       else()
-        file(TOUCH ${CMAKE_CURRENT_BINARY_DIR}/proto/${rel_path}/__init__.py)
         set(did_generate_proto_sources TRUE)
       endif()
     else()

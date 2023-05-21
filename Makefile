@@ -65,12 +65,12 @@ test-debug test-release: test-%: build-%
 # Start targets makefile in docker environment
 .PHONY: docker-cmake-debug docker-build-debug docker-test-debug docker-cmake-release docker-build-release docker-test-release
 docker-cmake-debug docker-build-debug docker-test-debug docker-cmake-release docker-build-release docker-test-release: docker-%:
-	@docker-compose run --rm userver-ubuntu $(MAKE) $*
+	@docker compose run --rm userver-ubuntu $(MAKE) $*
 
 # Stop docker container and remove PG data
 .PHONY: docker-clean-data
 docker-clean-data:
-	@docker-compose down -v
+	@docker compose down -v
 
 # clean build folders
 .PHONY: dist-clean

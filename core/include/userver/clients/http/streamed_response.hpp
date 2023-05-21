@@ -42,7 +42,7 @@ class StreamedResponse final {
   const Headers& GetHeaders();
   const Response::CookiesMap& GetCookies();
 
-  using Queue = concurrent::StringStreamQueue;
+  using Queue = concurrent::SpscQueue<std::string>;
 
   /// Read another HTTP response body part into 'output'.
   /// Any previous data in 'output' is dropped.

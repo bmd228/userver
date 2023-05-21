@@ -114,7 +114,7 @@ class HttpResponse final : public request::ResponseBase {
   bool WaitForHeadersEnd() override;
   void SetHeadersEnd() override;
 
-  using Queue = concurrent::StringStreamQueue;
+  using Queue = concurrent::SpscQueue<std::string>;
 
   void SetStreamBody();
   bool IsBodyStreamed() const override;
@@ -122,12 +122,8 @@ class HttpResponse final : public request::ResponseBase {
   Queue::Producer GetBodyProducer();
 
  private:
-  // Returns total size of the response
-  std::size_t SetBodyStreamed(engine::io::Socket& socket, std::string& header);
-
-  // Returns total size of the response
-  std::size_t SetBodyNotStreamed(engine::io::Socket& socket,
-                                 std::string& header);
+  void SetBodyStreamed(engine::io::Socket& socket, std::string& header);
+  void SetBodyNotstreamed(engine::io::Socket& socket, std::string& header);
 
   const HttpRequestImpl& request_;
   HttpStatus status_ = HttpStatus::kOk;

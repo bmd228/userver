@@ -18,28 +18,11 @@ USERVER_NAMESPACE_BEGIN
 
 namespace ugrpc::server {
 
-/// @brief A non-typed base class for any gRPC call
-class CallAnyBase {
- public:
-  /// @brief Complete the RPC with an error
-  ///
-  /// `Finish` must not be called multiple times for the same RPC.
-  ///
-  /// @param status error details
-  /// @throws ugrpc::server::RpcError on an RPC error
-  virtual void FinishWithError(const grpc::Status& status) = 0;
-
-  /// @returns the `ServerContext` used for this RPC
-  /// @note Initial server metadata is not currently supported
-  /// @note Trailing metadata, if any, must be set before the `Finish` call
-  virtual grpc::ServerContext& GetContext() = 0;
-};
-
 /// @brief Controls a single request -> single response RPC
 ///
 /// The RPC is cancelled on destruction unless `Finish` has been called.
 template <typename Response>
-class UnaryCall final : public CallAnyBase {
+class UnaryCall final {
  public:
   /// @brief Complete the RPC successfully
   ///
@@ -55,12 +38,12 @@ class UnaryCall final : public CallAnyBase {
   ///
   /// @param status error details
   /// @throws ugrpc::server::RpcError on an RPC error
-  void FinishWithError(const grpc::Status& status) override;
+  void FinishWithError(const grpc::Status& status);
 
   /// @returns the `ServerContext` used for this RPC
   /// @note Initial server metadata is not currently supported
   /// @note Trailing metadata, if any, must be set before the `Finish` call
-  grpc::ServerContext& GetContext() override;
+  grpc::ServerContext& GetContext();
 
   /// For internal use only
   UnaryCall(grpc::ServerContext& context, std::string_view call_name,
@@ -90,7 +73,7 @@ class UnaryCall final : public CallAnyBase {
 /// If any method throws, further methods must not be called on the same stream,
 /// except for `GetContext`.
 template <typename Request, typename Response>
-class InputStream final : public CallAnyBase {
+class InputStream final {
  public:
   /// @brief Await and read the next incoming message
   /// @param request where to put the request on success
@@ -111,12 +94,12 @@ class InputStream final : public CallAnyBase {
   ///
   /// @param status error details
   /// @throws ugrpc::server::RpcError on an RPC error
-  void FinishWithError(const grpc::Status& status) override;
+  void FinishWithError(const grpc::Status& status);
 
   /// @returns the `ServerContext` used for this RPC
   /// @note Initial server metadata is not currently supported
   /// @note Trailing metadata, if any, must be set before the `Finish` call
-  grpc::ServerContext& GetContext() override;
+  grpc::ServerContext& GetContext();
 
   /// For internal use only
   InputStream(grpc::ServerContext& context, std::string_view call_name,
@@ -148,7 +131,7 @@ class InputStream final : public CallAnyBase {
 /// If any method throws, further methods must not be called on the same stream,
 /// except for `GetContext`.
 template <typename Response>
-class OutputStream final : public CallAnyBase {
+class OutputStream final {
  public:
   /// @brief Write the next outgoing message
   /// @param response the next message to write
@@ -168,7 +151,7 @@ class OutputStream final : public CallAnyBase {
   ///
   /// @param status error details
   /// @throws ugrpc::server::RpcError on an RPC error
-  void FinishWithError(const grpc::Status& status) override;
+  void FinishWithError(const grpc::Status& status);
 
   /// @brief Equivalent to `Write + Finish`
   ///
@@ -183,7 +166,7 @@ class OutputStream final : public CallAnyBase {
   /// @returns the `ServerContext` used for this RPC
   /// @note Initial server metadata is not currently supported
   /// @note Trailing metadata, if any, must be set before the `Finish` call
-  grpc::ServerContext& GetContext() override;
+  grpc::ServerContext& GetContext();
 
   /// For internal use only
   OutputStream(grpc::ServerContext& context, std::string_view call_name,
@@ -215,7 +198,7 @@ class OutputStream final : public CallAnyBase {
 /// If any method throws, further methods must not be called on the same stream,
 /// except for `GetContext`.
 template <typename Request, typename Response>
-class BidirectionalStream : public CallAnyBase {
+class BidirectionalStream {
  public:
   /// @brief Await and read the next incoming message
   /// @param request where to put the request on success
@@ -241,7 +224,7 @@ class BidirectionalStream : public CallAnyBase {
   ///
   /// @param status error details
   /// @throws ugrpc::server::RpcError on an RPC error
-  void FinishWithError(const grpc::Status& status) override;
+  void FinishWithError(const grpc::Status& status);
 
   /// @brief Equivalent to `Write + Finish`
   ///
@@ -256,7 +239,7 @@ class BidirectionalStream : public CallAnyBase {
   /// @returns the `ServerContext` used for this RPC
   /// @note Initial server metadata is not currently supported
   /// @note Trailing metadata, if any, must be set before the `Finish` call
-  grpc::ServerContext& GetContext() override;
+  grpc::ServerContext& GetContext();
 
   /// For internal use only
   BidirectionalStream(grpc::ServerContext& context, std::string_view call_name,

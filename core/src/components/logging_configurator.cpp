@@ -10,7 +10,6 @@
 #include <userver/yaml_config/merge_schemas.hpp>
 
 #include <logging/rate_limit.hpp>
-#include <logging/split_location.hpp>
 
 USERVER_NAMESPACE_BEGIN
 
@@ -74,12 +73,12 @@ void LoggingConfigurator::OnConfigUpdate(
       AddDynamicDebugLog("", logging::kAnyLine, logging::EntryState::kDefault);
 
       for (const auto& location : dd.force_disabled) {
-        const auto [path, line] = logging::SplitLocation(location);
-        AddDynamicDebugLog(path, line, logging::EntryState::kForceDisabled);
+        AddDynamicDebugLog(location, logging::kAnyLine,
+                           logging::EntryState::kForceDisabled);
       }
       for (const auto& location : dd.force_enabled) {
-        const auto [path, line] = logging::SplitLocation(location);
-        AddDynamicDebugLog(path, line, logging::EntryState::kForceEnabled);
+        AddDynamicDebugLog(location, logging::kAnyLine,
+                           logging::EntryState::kForceEnabled);
       }
 
       lock.Commit();

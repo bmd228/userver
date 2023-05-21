@@ -36,12 +36,12 @@ The following options could be used to control `cmake`:
 | USERVER_DOWNLOAD_PACKAGE_CARES         | Download and setup c-ares if no c-ares of matching version was found                                                  | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_CCTZ          | Download and setup cctz if no cctz of matching version was found                                                      | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_CLICKHOUSECPP | Download and setup clickhouse-cpp                                                                                     | ${USERVER_DOWNLOAD_PACKAGES}                     |
-| USERVER_DOWNLOAD_PACKAGE_CRYPTOPP      | Download and setup CryptoPP if no CryptoPP of matching version was found                                              | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_CURL          | Download and setup libcurl if no libcurl of matching version was found                                                | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_FMT           | Download and setup Fmt if no Fmt of matching version was found                                                        | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_GTEST         | Download and setup gtest if no gtest of matching version was found                                                    | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_GBENCH        | Download and setup gbench if no gbench of matching version was found                                                  | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_DOWNLOAD_PACKAGE_SPDLOG        | Download and setup Spdlog if no Spdlog of matching version was found                                                  | ${USERVER_DOWNLOAD_PACKAGES}                     |
+| USERVER_DOWNLOAD_PACKAGE_CRYPTOPP      | Download and setup CryptoPP if no CryptoPP of matching version was found                                              | ${USERVER_DOWNLOAD_PACKAGES}                     |
 | USERVER_IS_THE_ROOT_PROJECT            | Build tests, samples and helper tools                                                                                 | auto-detects if userver is the top level project |
 | USERVER_GOOGLE_COMMON_PROTOS_TARGET    | Name of cmake target preparing google common proto library                                                            | Builds userver-api-common-protos                 |
 | USERVER_GOOGLE_COMMON_PROTOS           | Path to the folder with google common proto files                                                                     | Downloads to third_party automatically           |
@@ -50,7 +50,6 @@ The following options could be used to control `cmake`:
 | USERVER_PG_INCLUDE_DIR                 | Path to the folder with @ref POSTGRES_LIBS "PostgreSQL libpq headers", for example /usr/local/include                 | autodetected                                     |
 | USERVER_PG_LIBRARY_DIR                 | Path to the folder with @ref POSTGRES_LIBS "PostgreSQL libpq libraries", for example /usr/local/lib                   | autodetected                                     |
 | USERVER_MYSQL_ALLOW_BUGGY_LIBMARIADB   | Allows mysql driver to leak memory instead of aborting in some rare cases when linked against libmariadb3<3.3.4       | OFF                                              |
-| USERVER_DISABLE_PHDR_CACHE             | Disable caching of dl_phdr_info items, which interferes with dlopen                                                   | OFF                                              |
 
 [hi_malloc]: https://bugs.launchpad.net/ubuntu/+source/hiredis/+bug/1888025
 
@@ -215,13 +214,13 @@ Follow the platforms specific instructions:
     * Using an AUR helper (pikaur in this example)
 ```
 bash
-pikaur -S $(cat scripts/docs/en/deps/arch.md | sed 's/^makepkg|//g' | tr '\n' ' ')
+pikaur -S $(cat scripts/docs/en/deps/arch.md | tr '\n' ' ')
 ```
     * No AUR helper
 ```
 bash
-sudo pacman -S $(cat scripts/docs/en/deps/arch.md | grep -v -- 'makepkg|' | tr '\n' ' ')
-cat scripts/docs/en/deps/arch.md | grep -oP '^makepkg\|\K.*' | while read ;\
+sudo pacman -S $(cat scripts/docs/en/deps/arch.md | grep -v -- '-git' | tr '\n' ' ')
+cat scripts/docs/en/deps/arch.md | grep -- '-git' | while read ;\
   do \
     DIR=$(mktemp -d) ;\
     git clone https://aur.archlinux.org/$REPLY.git $DIR ;\
@@ -314,22 +313,22 @@ Docker images in userver provide the following functionality:
 - build and start all userver tests:
 ```
 bash
-docker-compose run --rm userver-tests
+docker compose run --rm userver-tests
 ```
 - build `hello_service` sample:
 ```
 bash
-docker-compose run --rm userver-service-sample
+docker compose run --rm userver-service-sample
 ```
 or
 ```
 bash
-SERVICE_NAME=hello_service docker-compose run --rm userver-service-sample
+SERVICE_NAME=hello_service docker compose run --rm userver-service-sample
 ```
 - execute commands in userver development environment:
 ```
 bash
-docker-compose run --rm userver-ubuntu bash
+docker compose run --rm userver-ubuntu bash
 ```
 
 
@@ -337,19 +336,23 @@ Each step of the `userver-tests` could be executed separately:
 
 Start CMake:
 ```
-docker-compose run --rm userver-ubuntu bash -c 'cmake $CMAKE_OPTS -B./build -S./'
+docker compose run --rm userver-ubuntu bash -c 'cmake $CMAKE_OPTS -B./build -S./'
 ```
 Build userver:
 ```
-docker-compose run --rm userver-ubuntu bash -c 'cd /userver/build && make -j $(nproc)'
+docker compose run --rm userver-ubuntu bash -c 'cd /userver/build && make -j $(nproc)'
 ```
 Run all test:
 ```
-docker-compose run --rm userver-ubuntu bash -c 'cd /userver/build && ulimit -n 4096 && ctest -V'
+docker compose run --rm userver-ubuntu bash -c 'cd /userver/build && ulimit -n 4096 && ctest -V'
 ```
 
-##### Using make, you can build the service easier
+##### Using make, you can build a userver easier
 
+Add additional flags in `Makefile.local`
+```
+echo 'CMAKE_COMMON_FLAGS += -DUserverGrpc_VERSION=1.54.0' >> Makefile.local
+```
 Start cmake:
 ```
 make docker-cmake-debug

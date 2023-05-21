@@ -17,13 +17,12 @@ ugrpc::server::ServerConfig MakeServerConfig() {
 }  // namespace
 
 GrpcServiceFixture::GrpcServiceFixture()
-    : server_(MakeServerConfig(), statistics_storage_), ts_({}, false) {}
+    : server_(MakeServerConfig(), statistics_storage_) {}
 
 GrpcServiceFixture::~GrpcServiceFixture() = default;
 
 void GrpcServiceFixture::RegisterService(ugrpc::server::ServiceBase& service) {
-  static ugrpc::server::Middlewares mws;
-  server_.AddService(service, engine::current_task::GetTaskProcessor(), mws);
+  server_.AddService(service, engine::current_task::GetTaskProcessor());
 }
 
 void GrpcServiceFixture::StartServer(
@@ -32,8 +31,7 @@ void GrpcServiceFixture::StartServer(
   endpoint_ = fmt::format("[::1]:{}", server_.GetPort());
   client_factory_.emplace(std::move(client_factory_config),
                           engine::current_task::GetTaskProcessor(),
-                          server_.GetCompletionQueue(), statistics_storage_,
-                          ts_);
+                          server_.GetCompletionQueue(), statistics_storage_);
 }
 
 void GrpcServiceFixture::StopServer() noexcept {

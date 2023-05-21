@@ -2,7 +2,6 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <string>
 
 #include <userver/utils/assert.hpp>
 

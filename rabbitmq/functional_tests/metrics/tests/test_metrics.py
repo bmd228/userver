@@ -1,13 +1,15 @@
-def _normalize_metrics(metrics: str) -> str:
-    result = []
-    for line in metrics.splitlines():
-        line = line.strip()
-        if line.startswith('#') or not line:
-            continue
+import typing
 
-        left, _ = line.rsplit('\t', 1)
-        result.append(left + '\t' + '0')
-    return '\n'.join(result) + '\n'
+
+def _normalize_metrics(metrics: str) -> str:
+    result: typing.List[str] = []
+    for line in metrics.splitlines():
+        if 'rabbitmq' in line:
+            left, _, _ = line.rsplit(' ', 2)
+            result.append(left + ' ' + '0')
+
+    result.sort()
+    return '\n'.join(result)
 
 
 async def test_metrics_smoke(monitor_client):
@@ -40,10 +42,8 @@ async def test_metrics(service_client, monitor_client, testpoint, load):
     response = await service_client.get('/v1/messages')
     assert response.status_code == 200
 
-    ethalon = load('metrics_values.txt')
+    ethalon = _normalize_metrics(load('metrics_values.txt'))
     all_metrics = _normalize_metrics(
-        await monitor_client.metrics_raw(
-            output_format='pretty', prefix='rabbitmq',
-        ),
+        await monitor_client.metrics_raw(output_format='graphite'),
     )
     assert all_metrics == ethalon

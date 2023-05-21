@@ -243,10 +243,6 @@ void RequestState::unix_socket_path(const std::string& path) {
   easy().set_unix_socket_path(path);
 }
 
-void RequestState::connect_to(const std::string& path) {
-  easy().set_connect_to(path);
-}
-
 void RequestState::proxy(const std::string& value) {
   proxy_url_ = value;
   easy().set_proxy(value);
@@ -415,7 +411,7 @@ void RequestState::on_completed(std::shared_ptr<RequestState> holder,
                      buffered_data.promise_.set_value(holder->response_move());
                    },
                    [](StreamData& stream_data) {
-                     std::move(stream_data.queue_producer).Reset();
+                     std::move(stream_data.queue_producer).Release();
                    }},
                holder->data_);
   }

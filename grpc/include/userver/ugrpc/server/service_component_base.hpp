@@ -8,7 +8,6 @@
 #include <userver/components/loggable_component_base.hpp>
 #include <userver/engine/task/task_processor_fwd.hpp>
 
-#include <userver/ugrpc/server/middleware_base.hpp>
 #include <userver/ugrpc/server/service_base.hpp>
 
 USERVER_NAMESPACE_BEGIN
@@ -16,8 +15,6 @@ USERVER_NAMESPACE_BEGIN
 namespace ugrpc::server {
 
 class Server;
-
-// clang-format off
 
 /// @ingroup userver_components userver_base_classes
 ///
@@ -27,10 +24,6 @@ class Server;
 /// Name | Description | Default value
 /// ---- | ----------- | -------------
 /// task-processor | the task processor to use for responses | -
-/// middlewares | middleware component names to use for each RPC call, can be empty array ([]) | -
-
-// clang-format on
-
 class ServiceComponentBase : public components::LoggableComponentBase {
  public:
   ServiceComponentBase(const components::ComponentConfig& config,
@@ -46,7 +39,6 @@ class ServiceComponentBase : public components::LoggableComponentBase {
  private:
   Server& server_;
   engine::TaskProcessor& service_task_processor_;
-  Middlewares middlewares_;
   std::atomic<bool> registered_{false};
 };
 

@@ -81,19 +81,17 @@ UTEST_MT(GrpcServer, DestroyServerDuringRequest, 2) {
   utils::statistics::Storage statistics_storage;
 
   ugrpc::server::Server server(MakeServerConfig(), statistics_storage);
-  ugrpc::server::Middlewares mws;
-  server.AddService(service, engine::current_task::GetTaskProcessor(), mws);
+  server.AddService(service, engine::current_task::GetTaskProcessor());
   server.Start();
 
   // A separate client queue is necessary, since the client stops after the
   // server in this test.
   ugrpc::client::QueueHolder client_queue;
 
-  testsuite::GrpcControl ts({}, false);
   ugrpc::client::ClientFactory client_factory(
       ugrpc::client::ClientFactoryConfig{},
       engine::current_task::GetTaskProcessor(), client_queue.GetQueue(),
-      statistics_storage, ts);
+      statistics_storage);
 
   const std::string endpoint = fmt::format("[::1]:{}", server.GetPort());
   auto client =
@@ -126,11 +124,10 @@ UTEST(GrpcServer, DeadlineAffectsWaitForReady) {
   ugrpc::client::QueueHolder client_queue;
   const std::string endpoint = "[::1]:1234";
 
-  testsuite::GrpcControl ts({}, false);
   ugrpc::client::ClientFactory client_factory(
       ugrpc::client::ClientFactoryConfig{},
       engine::current_task::GetTaskProcessor(), client_queue.GetQueue(),
-      statistics_storage, ts);
+      statistics_storage);
 
   auto client =
       client_factory.MakeClient<sample::ugrpc::UnitTestServiceClient>(endpoint);

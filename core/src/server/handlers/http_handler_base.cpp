@@ -14,7 +14,6 @@
 #include <userver/components/component.hpp>
 #include <userver/components/statistics_storage.hpp>
 #include <userver/dynamic_config/storage/component.hpp>
-#include <userver/engine/deadline.hpp>
 #include <userver/engine/task/cancel.hpp>
 #include <userver/engine/task/inherited_variable.hpp>
 #include <userver/formats/json/serialize.hpp>
@@ -91,15 +90,14 @@ void SetFormattedErrorResponse(http::HttpResponse& http_response,
 
 void SetFormattedErrorResponse(
     server::http::ResponseBodyStream& response_body_stream,
-    FormattedErrorData&& formatted_error, engine::Deadline deadline) {
+    FormattedErrorData&& formatted_error) {
   if (formatted_error.content_type) {
     response_body_stream.SetHeader(
         USERVER_NAMESPACE::http::headers::kContentType,
         std::move(formatted_error.content_type->ToString()));
   }
   response_body_stream.SetEndOfHeaders();
-  response_body_stream.PushBodyChunk(std::move(formatted_error.external_body),
-                                     deadline);
+  response_body_stream.PushBodyChunk(std::move(formatted_error.external_body));
 }
 
 const std::string kTracingTypeResponse = "response";
@@ -434,12 +432,11 @@ void HttpHandlerBase::HandleRequestStream(
     }
     if (e.IsExternalErrorBodyFormatted()) {
       response_body_stream.SetEndOfHeaders();
-      response_body_stream.PushBodyChunk(std::string{e.GetExternalErrorBody()},
-                                         engine::Deadline());
+      response_body_stream.PushBodyChunk(std::string{e.GetExternalErrorBody()});
     } else {
       auto formatted_error = GetFormattedExternalErrorBody(e);
       SetFormattedErrorResponse(response_body_stream,
-                                std::move(formatted_error), engine::Deadline());
+                                std::move(formatted_error));
     }
   } catch (const std::exception& e) {
     if (engine::current_task::ShouldCancel()) {

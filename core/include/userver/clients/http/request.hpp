@@ -191,9 +191,6 @@ class Request final : public std::enable_shared_from_this<Request> {
   /// of establishing a TCP connection to a host.
   std::shared_ptr<Request> unix_socket_path(const std::string& path);
 
-  /// Set CURLOPT_CONNECT_TO option
-  std::shared_ptr<Request> connect_to(const std::string& path);
-
   /// Override log URL. Usefull for "there's a secret in the query".
   /// @warning The query might be logged by other intermediate HTTP agents
   ///          (nginx, L7 balancer, etc.).
@@ -253,7 +250,7 @@ class Request final : public std::enable_shared_from_this<Request> {
   /// StreamedResponse uses queue consumer.
   /// @see src/clients/http/partial_pesponse.hpp
   [[nodiscard]] StreamedResponse async_perform_stream_body(
-      const std::shared_ptr<concurrent::StringStreamQueue>& queue,
+      const std::shared_ptr<concurrent::SpscQueue<std::string>>& queue,
       utils::impl::SourceLocation location =
           utils::impl::SourceLocation::Current());
 

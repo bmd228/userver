@@ -5,18 +5,17 @@ import sys
 def _normalize_metrics(metrics: str) -> str:
     result = []
     for line in metrics.splitlines():
-        line = line.strip()
-        if line.startswith('#') or not line:
-            continue
+        left, _, _ = line.rsplit(' ', 2)
 
-        left, _ = line.rsplit('\t', 1)
         if sys.platform == 'darwin' and left.startswith('io_'):
             # MacOS does not provide some of the io_* metrics
             continue
-        left = re.sub('localhost:\\d+', 'localhost:00000', left + '\t' + '0')
-        result.append(left)
+
+        left = re.sub('localhost_\\d+', 'localhost_00000', left)
+        result.append(left + ' ' + '0')
+
     result.sort()
-    return '\n'.join(result) + '\n'
+    return '\n'.join(result)
 
 
 async def test_metrics_smoke(monitor_client):
@@ -32,8 +31,7 @@ async def test_metrics_smoke(monitor_client):
 
 async def test_metrics(monitor_client, load):
     ethalon = _normalize_metrics(load('metrics_values.txt'))
-    assert ethalon
     all_metrics = _normalize_metrics(
-        await monitor_client.metrics_raw(output_format='pretty'),
+        await monitor_client.metrics_raw(output_format='graphite'),
     )
     assert all_metrics == ethalon

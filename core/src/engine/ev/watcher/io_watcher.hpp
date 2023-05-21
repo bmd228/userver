@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <system_error>
 
 #include <engine/ev/thread_control.hpp>
 #include <engine/ev/watcher.hpp>

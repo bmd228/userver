@@ -242,20 +242,16 @@ void HttpResponse::SendResponse(engine::io::Socket& socket) {
     header.append(kCrlf);
   }
 
-  std::size_t sent_bytes{};
-
   if (IsBodyStreamed() && GetData().empty()) {
-    sent_bytes = SetBodyStreamed(socket, header);
+    SetBodyStreamed(socket, header);
   } else {
     // e.g. a CustomHandlerException
-    sent_bytes = SetBodyNotStreamed(socket, header);
+    SetBodyNotstreamed(socket, header);
   }
-
-  SetSent(sent_bytes, std::chrono::steady_clock::now());
 }
 
-std::size_t HttpResponse::SetBodyNotStreamed(engine::io::Socket& socket,
-                                             std::string& header) {
+void HttpResponse::SetBodyNotstreamed(engine::io::Socket& socket,
+                                      std::string& header) {
   const bool is_body_forbidden = IsBodyForbiddenForStatus(status_);
   const bool is_head_request = request_.GetOrigMethod() == HttpMethod::kHead;
   const auto& data = GetData();
@@ -283,11 +279,12 @@ std::size_t HttpResponse::SetBodyNotStreamed(engine::io::Socket& socket,
         socket.SendAll(header.data(), header.size(), engine::Deadline{});
   }
 
-  return sent_bytes;
+  SetSentTime(std::chrono::steady_clock::now());
+  SetSent(sent_bytes);
 }
 
-std::size_t HttpResponse::SetBodyStreamed(engine::io::Socket& socket,
-                                          std::string& header) {
+void HttpResponse::SetBodyStreamed(engine::io::Socket& socket,
+                                   std::string& header) {
   impl::OutputHeader(
       header, USERVER_NAMESPACE::http::headers::kTransferEncoding, "chunked");
 
@@ -317,7 +314,8 @@ std::size_t HttpResponse::SetBodyStreamed(engine::io::Socket& socket,
   body_stream_producer_.reset();
   body_stream_.reset();
 
-  return sent_bytes;
+  SetSentTime(std::chrono::steady_clock::now());
+  SetSent(sent_bytes);
 }
 
 void SetThrottleReason(http::HttpResponse& http_response,

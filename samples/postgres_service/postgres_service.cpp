@@ -4,7 +4,6 @@
 #include <userver/utest/using_namespace_userver.hpp>
 
 /// [Postgres service sample - component]
-#include <userver/components/component.hpp>
 #include <userver/components/minimal_server_component_list.hpp>
 #include <userver/server/handlers/http_handler_base.hpp>
 #include <userver/utils/daemon_run.hpp>

@@ -50,10 +50,9 @@ UTEST_P_MT(GrpcChannels, TryWaitForConnected, 2) {
     config.channel_count = GetParam();
     ugrpc::client::QueueHolder client_queue;
 
-    testsuite::GrpcControl ts({}, false);
     ugrpc::client::ClientFactory client_factory(
         std::move(config), engine::current_task::GetTaskProcessor(),
-        client_queue.GetQueue(), statistics_storage, ts);
+        client_queue.GetQueue(), statistics_storage);
 
     const auto endpoint = fmt::format("[::1]:{}", kPort);
     auto client =
@@ -81,8 +80,7 @@ UTEST_P_MT(GrpcChannels, TryWaitForConnected, 2) {
 
   UnitTestServiceSimple service;
   ugrpc::server::Server server(MakeServerConfig(), statistics_storage);
-  ugrpc::server::Middlewares mws;
-  server.AddService(service, engine::current_task::GetTaskProcessor(), mws);
+  server.AddService(service, engine::current_task::GetTaskProcessor());
   server.Start();
   client_task.Get();
   server.Stop();

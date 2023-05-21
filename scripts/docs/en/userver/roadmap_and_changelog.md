@@ -418,7 +418,7 @@ Changelog news also go to the
 * Improved MacOS support, thanks to
   [Evgeny Medvedev](https://github.com/kargatpwnz).
 * Docker support: [base image for development](https://github.com/userver-framework/docker-userver-build-base/pkgs/container/docker-userver-build-base),
-  docker-compose.yaml for the userver with build and test targets.
+  docker compose.yaml for the userver with build and test targets.
   See @ref md_en_userver_tutorial_build
 * Docs improved: removed internal links; added
   @ref md_en_userver_framework_comparison,

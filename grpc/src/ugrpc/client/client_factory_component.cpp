@@ -3,7 +3,6 @@
 #include <userver/components/component_config.hpp>
 #include <userver/components/component_context.hpp>
 #include <userver/components/statistics_storage.hpp>
-#include <userver/testsuite/testsuite_support.hpp>
 #include <userver/yaml_config/merge_schemas.hpp>
 
 #include <userver/ugrpc/server/server_component.hpp>
@@ -31,11 +30,8 @@ ClientFactoryComponent::ClientFactoryComponent(
   auto& statistics_storage =
       context.FindComponent<components::StatisticsStorage>().GetStorage();
 
-  auto& testsuite_grpc =
-      context.FindComponent<components::TestsuiteSupport>().GetGrpcControl();
-
   factory_.emplace(config.As<ClientFactoryConfig>(), task_processor, *queue,
-                   statistics_storage, testsuite_grpc);
+                   statistics_storage);
 }
 
 ClientFactory& ClientFactoryComponent::GetFactory() { return *factory_; }

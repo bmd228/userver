@@ -25,15 +25,15 @@ where `userver_docker_tag` should be replaced with the full path to the package,
 if you want to upload the image to external storage, for example
 `ghcr.io/userver-framework/ubuntu-userver-build-base:v1`.
 
-## Set image in docker-compose.yml
+## Set image in docker compose.yml
 
-In the file @ref docker-compose.yml "docker-compose.yml"
+In the file @ref docker compose.yml "docker compose.yml"
 specify your image in the container you want to work with or create a new one
 
 ## Done
 
-You can work with `userver` via `docker` using `docker-compose`, 
+You can work with `userver` via `docker` using `docker compose`, 
 more_detailed @ref DOCKER_BUILD "here"
 
 @example scripts/docker/prepare image.sh
-@example docker-compose.yml
+@example docker compose.yml

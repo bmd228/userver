@@ -20,7 +20,7 @@ libev-devel
 libpq-devel
 libubsan
 mongo-c-driver-devel
-nghttp2-devel
+libnghttp2-devel
 openldap-devel
 openssl-devel
 postgresql-server

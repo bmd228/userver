@@ -12,11 +12,10 @@ ResponseBodyStream::ResponseBodyStream(
     : queue_producer_(std::move(queue_producer)),
       http_response_(http_response) {}
 
-void ResponseBodyStream::PushBodyChunk(std::string&& chunk,
-                                       engine::Deadline deadline) {
+void ResponseBodyStream::PushBodyChunk(std::string&& chunk) {
   UASSERT_MSG(headers_ended_,
               "SetEndOfHeaders() was not called before PushBodyChunk()");
-  const auto success = queue_producer_.Push(std::move(chunk), deadline);
+  const auto success = queue_producer_.Push(std::move(chunk));
   UASSERT(success);
 }
 

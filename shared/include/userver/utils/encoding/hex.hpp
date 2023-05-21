@@ -3,7 +3,6 @@
 /// @file userver/utils/encoding/hex.hpp
 /// @brief Encoders, decoders and helpers for hexadecimal representations
 
-#include <cstdint>
 #include <string>
 
 USERVER_NAMESPACE_BEGIN

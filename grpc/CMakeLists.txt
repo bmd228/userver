@@ -1,17 +1,20 @@
-project(userver-grpc-internal CXX)
+project(userver-grpc CXX)
 
 include(GrpcTargets)
 
 add_library(${PROJECT_NAME}-deps INTERFACE)
 target_include_directories(${PROJECT_NAME}-deps INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${PROJECT_NAME}-deps INTERFACE
-    protobuf::libprotobuf gRPC::grpc++
-)
-if(USERVER_CONAN AND "${gRPC_VERSION}" VERSION_GREATER_EQUAL "1.41")
-  target_link_libraries(
-      ${PROJECT_NAME}-deps INTERFACE
-      absl::base absl::synchronization
-  )
+if (USERVER_CONAN)
+    target_link_libraries(${PROJECT_NAME}-deps INTERFACE
+        protobuf::protobuf grpc::grpc
+    )
+    if ("${GRPC_LIBRARY_VERSION}" VERSION_GREATER_EQUAL "1.41")
+        target_link_libraries(${PROJECT_NAME}-deps INTERFACE
+            absl::base absl::synchronization
+        )
+    endif()
+else()
+    target_link_libraries(${PROJECT_NAME}-deps INTERFACE protobuf::libprotobuf Grpc)
 endif()
 
 
@@ -35,7 +38,7 @@ if (USERVER_IS_THE_ROOT_PROJECT)
 endif()
 
 file(GLOB_RECURSE UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/*_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp
 )
 list(REMOVE_ITEM SOURCES ${UNIT_TEST_SOURCES})
 
@@ -61,7 +64,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC userver-core)
 
 set(CHANNELZ_MIN_VERSION "1.17.0")
-if (${gRPC_VERSION} VERSION_GREATER_EQUAL ${CHANNELZ_MIN_VERSION})
+if (${GRPC_LIBRARY_VERSION} VERSION_GREATER_EQUAL ${CHANNELZ_MIN_VERSION})
     set(HAS_CHANNELZ TRUE)
 else()
     set(HAS_CHANNELZ FALSE)
@@ -70,18 +73,17 @@ option(USERVER_FEATURE_GRPC_CHANNELZ "Enable Channelz for gRPC" ${HAS_CHANNELZ})
 if (${USERVER_FEATURE_GRPC_CHANNELZ} AND NOT ${HAS_CHANNELZ})
     message(FATAL_ERROR
         "For Channelz, install gRPC >= ${CHANNELZ_MIN_VERSION}"
-        "(found: ${gRPC_VERSION})")
+        "(found: ${GRPC_LIBRARY_VERSION})")
 endif()
 
 if (USERVER_FEATURE_GRPC_CHANNELZ)
     message(STATUS "gRPC Channelz enabled")
-    if(GRPC_USE_SYSTEM_PACKAGE)
+    if (USERVER_CONAN)
+        target_link_libraries(${PROJECT_NAME} PUBLIC gRPC::grpcpp_channelz)
+    else()
         find_package(GrpcChannelz REQUIRED)
-        if(NOT TARGET gRPC::grpcpp_channelz)
-            add_library(gRPC::grpcpp_channelz ALIAS GrpcChannelz)
-        endif()
+        target_link_libraries(${PROJECT_NAME} PUBLIC GrpcChannelz)
     endif()
-    target_link_libraries(${PROJECT_NAME} PUBLIC gRPC::grpcpp_channelz)
 else()
     message(STATUS "gRPC Channelz disabled, install gRPC >= ${CHANNELZ_MIN_VERSION} to enable")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -110,9 +112,3 @@ if (USERVER_IS_THE_ROOT_PROJECT)
       DEFAULT_DYNAMIC_CONFIG_FILENAME="${CMAKE_SOURCE_DIR}/grpc/tests/dynamic_config_fallback.json"
     )
 endif()
-
-add_subdirectory(handlers)
-
-add_library(userver-grpc INTERFACE)
-target_link_libraries(userver-grpc INTERFACE userver-grpc-handlers)
-target_link_libraries(userver-grpc INTERFACE userver-grpc-internal)

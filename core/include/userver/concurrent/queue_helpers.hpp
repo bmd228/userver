@@ -58,7 +58,7 @@ class Producer final {
     return queue_->PushNoblock(token_, std::move(value));
   }
 
-  void Reset() && {
+  void Release() && {
     if (queue_) queue_->MarkProducerIsDead();
     queue_.reset();
   }

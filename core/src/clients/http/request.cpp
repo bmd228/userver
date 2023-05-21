@@ -11,7 +11,6 @@
 #include <userver/clients/http/form.hpp>
 #include <userver/clients/http/response_future.hpp>
 #include <userver/clients/http/streamed_response.hpp>
-#include <userver/concurrent/queue.hpp>
 #include <userver/engine/future.hpp>
 #include <userver/http/common_headers.hpp>
 #include <userver/http/url.hpp>
@@ -227,7 +226,7 @@ ResponseFuture Request::async_perform(utils::impl::SourceLocation location) {
 }
 
 StreamedResponse Request::async_perform_stream_body(
-    const std::shared_ptr<concurrent::StringStreamQueue>& queue,
+    const std::shared_ptr<concurrent::SpscQueue<std::string>>& queue,
     utils::impl::SourceLocation location) {
   LOG_DEBUG() << "Starting an async HTTP request with streamed response body";
   pimpl_->async_perform_stream(queue, location);
@@ -306,11 +305,6 @@ std::shared_ptr<Request> Request::retry(short retries, bool on_fails) {
 
 std::shared_ptr<Request> Request::unix_socket_path(const std::string& path) {
   pimpl_->unix_socket_path(path);
-  return shared_from_this();
-}
-
-std::shared_ptr<Request> Request::connect_to(const std::string& path) {
-  pimpl_->connect_to(path);
   return shared_from_this();
 }
 

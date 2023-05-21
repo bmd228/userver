@@ -6,9 +6,9 @@
 
 #include <engine/ev/thread_control.hpp>
 #include <engine/ev/watcher.hpp>
-#include <userver/concurrent/mpsc_queue.hpp>
 #include <userver/engine/deadline.hpp>
 #include <userver/engine/io/common.hpp>
+#include <userver/engine/mpsc_queue.hpp>
 #include <userver/utils/flags.hpp>
 
 USERVER_NAMESPACE_BEGIN
@@ -75,8 +75,7 @@ class Poller final {
   void Interrupt();
 
  private:
-  explicit Poller(
-      const std::shared_ptr<USERVER_NAMESPACE::concurrent::MpscQueue<Event>>&);
+  explicit Poller(const std::shared_ptr<MpscQueue<Event>>&);
 
   struct IoWatcher {
     explicit IoWatcher(Poller&);
@@ -96,8 +95,8 @@ class Poller final {
 
   static void IoEventCb(struct ev_loop*, ev_io*, int) noexcept;
 
-  USERVER_NAMESPACE::concurrent::MpscQueue<Event>::Consumer event_consumer_;
-  USERVER_NAMESPACE::concurrent::MpscQueue<Event>::Producer event_producer_;
+  MpscQueue<Event>::Consumer event_consumer_;
+  MpscQueue<Event>::Producer event_producer_;
   std::unordered_map<int, IoWatcher> watchers_;
 };
 
